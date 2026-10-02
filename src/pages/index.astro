@@ -41,13 +41,7 @@ const date = (date: string) =>
                   <time datetime="2025-03-05">{date(post.date)}</time>
                 </p>
                 <a
-                  href={withBaseUrl(
-                    `/posts/${post.title
-                      .toLowerCase()
-                      .trim()
-                      .replace(/[^a-z0-9\s-]/g, "")
-                      .replace(/\s+/g, "-")}`,
-                  )}
+                  href={withBaseUrl(`/posts/${post.slug}`)}
                   class="post__title"
                 >
                   <h2>{post.title}</h2>
