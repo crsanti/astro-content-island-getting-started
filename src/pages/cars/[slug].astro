@@ -1,0 +1,151 @@
+---
+import type { GetStaticPathsOptions, GetStaticPathsResult } from "astro";
+import { marked } from "marked";
+import Layout from "../../layouts/Layout.astro";
+import { getCars } from "./cars.api";
+import type { Car } from "./cars.model";
+
+export const getStaticPaths =
+  async ({}: GetStaticPathsOptions): Promise<GetStaticPathsResult> => {
+    const cars = await getCars();
+    return cars.map((car) => ({
+      params: {
+        slug: car.slug,
+      },
+      props: { car },
+    }));
+  };
+
+interface Props {
+  car: Car;
+}
+
+const { car } = Astro.props;
+
+const carDescription = marked(car.description || "");
+const carTitle = `${car.brand} ${car.model} ${car.version}`;
+const carImage = `url(${car.image.url.url})`;
+---
+
+<Layout>
+  <div class="container background" style={`--car-image: ${carImage}`}>
+    <article class="article">
+      <header class="article__header">
+        <p class="article__meta">{car.year}</p>
+        <h1 class="article__title">{carTitle}</h1>
+      </header>
+      <div set:html={carDescription} class="article__content" />
+      <ul class="article__specs">
+        <li><span>Fuel type</span><span>{car.fuelType}</span></li>
+        <li><span>Transmission</span><span>{car.transmission}</span></li>
+        <li><span>Power</span><span>{car.powerHp} HP</span></li>
+        <li><span>Top speed</span><span>{car.topSpeedKmh} km/h</span></li>
+        {car.consumptionL100Km !== undefined && (
+          <li><span>Consumption</span><span>{car.consumptionL100Km} L/100km</span></li>
+        )}
+        {car.electricConsumptionKwh100Km !== undefined && (
+          <li><span>Electric consumption</span><span>{car.electricConsumptionKwh100Km} kWh/100km</span></li>
+        )}
+        {car.electricRangeKm !== undefined && (
+          <li><span>Electric range</span><span>{car.electricRangeKm} km</span></li>
+        )}
+        {car.batteryCapacityKwh !== undefined && (
+          <li><span>Battery capacity</span><span>{car.batteryCapacityKwh} kWh</span></li>
+        )}
+        <li><span>Seats</span><span>{car.seats}</span></li>
+        <li><span>Doors</span><span>{car.doors}</span></li>
+      </ul>
+      <footer>
+        <p>
+          Photo by <strong>{car.image.author}</strong> &mdash;{" "}
+          <a href={car.image.attributionUrl} target="_blank" rel="noopener noreferrer">
+            {car.image.license}
+          </a>
+        </p>
+      </footer>
+    </article>
+  </div>
+</Layout>
+
+<style>
+  .background::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 360px;
+    background-image: var(--car-image);
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: top center;
+  }
+
+  .article {
+    max-width: 800px;
+    margin-right: auto;
+    margin-left: auto;
+    margin-top: var(--space-2xl);
+    padding: var(--space-lg);
+    background-color: var(--pure-white);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+  }
+
+  .article__header {
+    text-align: center;
+  }
+  .article__meta {
+    opacity: 0.7;
+  }
+  .article__title {
+    font-size: var(--fs-3xl);
+    font-family: var(--ff-title);
+  }
+
+  .article__content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+
+    h2 {
+      margin-top: var(--space-sm);
+    }
+    ul {
+      padding-left: var(--space-md);
+    }
+    img {
+      width: 100%;
+      object-fit: cover;
+      aspect-ratio: 21/9;
+      border-radius: var(--border-radius);
+    }
+  }
+
+  .article__specs {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: var(--space-xs);
+
+    li {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3xs);
+      padding: var(--space-2xs);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+
+      span:first-child {
+        font-size: var(--fs-2xs);
+        opacity: 0.7;
+        text-transform: uppercase;
+      }
+      span:last-child {
+        font-size: var(--fs-md);
+      }
+    }
+  }
+</style>

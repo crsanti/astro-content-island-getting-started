@@ -1,0 +1,118 @@
+---
+import { Image } from "astro:assets";
+import Layout from "../../layouts/Layout.astro";
+import { getCars } from "./cars.api";
+
+const cars = await getCars();
+---
+
+<Layout>
+  <section class="container">
+    <div class="cars__header">
+      <h1>Cars Catalog</h1>
+      <p>All Cars</p>
+    </div>
+
+    <ul class="cars__list">
+      {cars.map((car) => (
+        <li>
+          <article class="car">
+            <a href={`/cars/${car.slug}`}>
+              <Image
+                src={car.image.url.url}
+                alt={car.image.url.name}
+                width={250}
+                height={100}
+                class:list={"car__image"}
+                loading="eager"
+              />
+            </a>
+            <div class="car__text">
+              <div class="car__header">
+                <p class="car__year">{car.year}</p>
+                <a href={`/cars/${car.slug}`} class="car__title">
+                  <h2>{car.brand} {car.model} {car.version}</h2>
+                </a>
+              </div>
+              <div>
+                <p class="car__description">{car.description}</p>
+              </div>
+            </div>
+          </article>
+        </li>
+      ))}
+    </ul>
+  </section>
+</Layout>
+<style>
+  .cars__header {
+    text-align: center;
+    margin-bottom: var(--space-lg);
+    h1 {
+      font-size: var(--fs-3xl);
+      font-family: var(--ff-title);
+    }
+  }
+  .cars__list {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    justify-items: center;
+    gap: var(--space-lg);
+  }
+  .car {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+  .car__image {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    object-position: top;
+    aspect-ratio: 16/9;
+    border-radius: var(--border-radius);
+  }
+  .car__text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2xs);
+  }
+
+  .car__header {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .car__year {
+    font-size: var(--fs-2xs);
+    opacity: 0.7;
+  }
+
+  .car__title {
+    text-decoration: none;
+    color: var(--text-color);
+    transition: color 0.3s ease-in-out;
+    &:hover {
+      color: var(--title-hover-color);
+    }
+
+    h2 {
+      font-size: var(--fs-lg);
+      font-family: var(--ff-title);
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      overflow: hidden;
+      line-height: 1.175;
+    }
+  }
+
+  .car__description {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+    overflow: hidden;
+  }
+</style>
