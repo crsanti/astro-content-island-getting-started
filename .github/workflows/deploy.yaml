@@ -20,12 +20,47 @@ env:
   CONTISL_DEMO_PROJECT_TOKEN: ${{secrets.CONTISL_DEMO_PROJECT_TOKEN}}
 
 jobs:
-  # Site served from the domain root (Netlify, Vercel)
-  build:
+  pull-snapshot:
     runs-on: ubuntu-latest
     steps:
       - name: Clone repository
         uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Create snapshots folder
+        run: mkdir -p .snapshots
+      - name: Export cars snapshot
+        run: npx content-island export --snapshot-path .snapshots/cars-project-snapshot.json
+        env:
+          CONTENT_ISLAND_ACCESS_TOKEN: ${{secrets.CONTISL_CARS_PROJECT_TOKEN}}
+      - name: Export demo snapshot
+        run: npx content-island export --snapshot-path .snapshots/demo-project-snapshot.json
+        env:
+          CONTENT_ISLAND_ACCESS_TOKEN: ${{secrets.CONTISL_DEMO_PROJECT_TOKEN}}
+      - name: Upload snapshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: snapshots
+          path: .snapshots
+          include-hidden-files: true
+
+  # Site served from the domain root (Netlify, Vercel)
+  build:
+    needs: pull-snapshot
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+      - name: Download snapshots
+        uses: actions/download-artifact@v4
+        with:
+          name: snapshots
+          path: .snapshots
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -43,10 +78,16 @@ jobs:
 
   # GitHub Pages serves the site from a subpath, so it needs its own build
   build-pages:
+    needs: pull-snapshot
     runs-on: ubuntu-latest
     steps:
       - name: Clone repository
         uses: actions/checkout@v4
+      - name: Download snapshots
+        uses: actions/download-artifact@v4
+        with:
+          name: snapshots
+          path: .snapshots
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
