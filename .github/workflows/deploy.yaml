@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Deploy
 
 on:
   push:
@@ -9,22 +9,49 @@ on:
     types: [deploy-from-content-island]
 
 permissions:
-  pages: write
-  id-token: write
+  contents: read
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
 
 env:
   CONTISL_CARS_PROJECT_TOKEN: ${{secrets.CONTISL_CARS_PROJECT_TOKEN}}
   CONTISL_DEMO_PROJECT_TOKEN: ${{secrets.CONTISL_DEMO_PROJECT_TOKEN}}
 
 jobs:
-  deploy:
+  # Site served from the domain root (Netlify, Vercel)
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{steps.deploy.outputs.page_url}}
     steps:
       - name: Clone repository
         uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Build solution
+        run: npm run build
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: ./dist
+
+  # GitHub Pages serves the site from a subpath, so it needs its own build
+  build-pages:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
       - name: Install dependencies
         run: npm ci
       - name: Setup pages
@@ -36,6 +63,54 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist
+
+  deploy-pages:
+    needs: build-pages
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{steps.deploy.outputs.page_url}}
+    steps:
       - name: Deploy
         id: deploy
         uses: actions/deploy-pages@v4
+
+  deploy-netlify:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: netlify
+    env:
+      NETLIFY_AUTH_TOKEN: ${{secrets.NETLIFY_AUTH_TOKEN}}
+      NETLIFY_SITE_ID: ${{secrets.NETLIFY_SITE_ID}}
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: site
+          path: ./dist
+      - name: Deploy
+        run: npx --yes netlify-cli deploy --prod --no-build --dir=dist
+
+  deploy-vercel:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: vercel
+    env:
+      VERCEL_ORG_ID: ${{secrets.VERCEL_ORG_ID}}
+      VERCEL_PROJECT_ID: ${{secrets.VERCEL_PROJECT_ID}}
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: site
+          path: ./.vercel/output/static
+      # Build Output API: deploy the existing build instead of rebuilding on Vercel
+      - name: Prepare prebuilt output
+        run: echo '{"version":3}' > .vercel/output/config.json
+      - name: Deploy
+        run: npx --yes vercel deploy --prebuilt --prod --token=${{secrets.VERCEL_TOKEN}}
