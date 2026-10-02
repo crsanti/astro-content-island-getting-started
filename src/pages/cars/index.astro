@@ -17,7 +17,7 @@ const cars = await getCars();
       {cars.map((car) => (
         <li>
           <article class="car">
-            <a href={`${import.meta.env.BASE_URL}cars/${car.slug}`}>
+            <a href={`${import.meta.env.BASE_URL}/cars/${car.slug}`}>
               <Image
                 src={car.image.url.url}
                 alt={car.image.url.name}
@@ -31,7 +31,7 @@ const cars = await getCars();
               <div class="car__header">
                 <p class="car__year">{car.year}</p>
                 <a
-                  href={`${import.meta.env.BASE_URL}cars/${car.slug}`}
+                  href={`${import.meta.env.BASE_URL}/cars/${car.slug}`}
                   class="car__title"
                 >
                   <h2>
