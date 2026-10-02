@@ -27,6 +27,7 @@ jobs:
         run: npm ci
       - name: Setup pages
         uses: actions/configure-pages@v5
+        id: pages
       - name: Build solution
         run: npm run build -- --base "${{steps.pages.outputs.base_path}}"
       - name: Upload artifact
