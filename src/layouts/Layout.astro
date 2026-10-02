@@ -1,4 +1,5 @@
 ---
+import { withBaseUrl } from "../lib/url";
 import Footer from "../components/Footer.astro";
 import Header from "../components/Header.astro";
 import "../styles/global.css";
@@ -9,7 +10,7 @@ import "../styles/global.css";
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href={withBaseUrl("/favicon.svg")} />
     <meta name="generator" content={Astro.generator} />
     <title>Astro Basics</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />

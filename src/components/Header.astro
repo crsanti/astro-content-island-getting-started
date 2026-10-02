@@ -1,19 +1,23 @@
+---
+import { withBaseUrl } from "../lib/url";
+---
+
 <header class="header">
   <nav class="menu">
     <ul>
       <li>
-        <a href=`${import.meta.env.BASE_URL}` class="menu__item">
+        <a href={withBaseUrl("/")} class="menu__item">
           Posts
         </a>
       </li>
       <div class="menu__right">
         <li>
-          <a href=`${import.meta.env.BASE_URL}/cars/` class="menu__item">
+          <a href={withBaseUrl("/cars/")} class="menu__item">
             All cars
           </a>
         </li>
         <li>
-          <a href=`${import.meta.env.BASE_URL}/about/` class="menu__item">
+          <a href={withBaseUrl("/about/")} class="menu__item">
             About
           </a>
         </li>
